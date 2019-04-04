@@ -8,52 +8,53 @@ import java.util.List;
 import java.util.Set;
 
 public class BirdFinder {
-	private int BLACK = Color.BLACK.getRGB();
+	private static int BLACK = Color.BLACK.getRGB();
+	private int noiseReduction;
 
-	private BufferedImage binaryImage;
-
-	public BirdFinder(BufferedImage binaryImage) {
-		this.binaryImage = MainController.binaryImage;
+	public BirdFinder(int noiseReduction) {
+		this.noiseReduction = noiseReduction;
 	}
 
-	public BufferedImage outlineBirds(BufferedImage toOutline) {
-		UnionFind uf = new UnionFind(binaryImage.getWidth() * binaryImage.getHeight());
+	public BufferedImage outlineBirds(BufferedImage binaryImage, BufferedImage toOutline) {
+		UnionFind uf = new UnionFind(toOutline.getWidth() * toOutline.getHeight());
 		Graphics toOutlineGraphics = toOutline.getGraphics();
-
+		int iw = binaryImage.getWidth();
+		
 		for (int y = 0; y < binaryImage.getHeight(); y++) {
 			for (int x = 0; x < binaryImage.getWidth(); x++) {
 				if (binaryImage.getRGB(x, y) != BLACK) {
 					continue;
 				}
+				int pixelId = getPixelId(iw, x, y);
 				if (x > 0 && binaryImage.getRGB(x - 1, y) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x - 1, y));
+					uf.union(pixelId, getPixelId(iw, x - 1, y));
 				}
 				if (y > 0 && binaryImage.getRGB(x, y - 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x, y - 1));
+					uf.union(pixelId, getPixelId(iw, x, y - 1));
 				}
 				if (y < binaryImage.getHeight() - 1 && binaryImage.getRGB(x, y + 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x, y + 1));
+					uf.union(pixelId, getPixelId(iw, x, y + 1));
 				}
 				if (x < binaryImage.getWidth() - 1 && binaryImage.getRGB(x + 1, y) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x + 1, y));
+					uf.union(pixelId, getPixelId(iw, x + 1, y));
 				}
 				if (x > 0 && y > 0 && binaryImage.getRGB(x - 1, y - 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x - 1, y - 1));
+					uf.union(pixelId, getPixelId(iw, x - 1, y - 1));
 				}
 				if (x > 0 && y < binaryImage.getHeight() - 1 && binaryImage.getRGB(x - 1, y + 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x - 1, y + 1));
+					uf.union(pixelId, getPixelId(iw, x - 1, y + 1));
 				}
 				if (x < binaryImage.getWidth() - 1 && y < binaryImage.getHeight() - 1
 						&& binaryImage.getRGB(x + 1, y + 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x + 1, y + 1));
+					uf.union(pixelId, getPixelId(iw, x + 1, y + 1));
 				}
 				if (x < binaryImage.getWidth() - 1 && y > 0 && binaryImage.getRGB(x + 1, y - 1) == BLACK) {
-					uf.union(getPixelId(x, y), getPixelId(x + 1, y - 1));
+					uf.union(pixelId, getPixelId(iw, x + 1, y - 1));
 				}
 			}
 		}
 
-		Set<Integer> roots = uf.getRoots(1);
+		Set<Integer> roots = uf.getRoots(this.noiseReduction);
 		Iterator<Integer> rootIter = roots.iterator();
 		while (rootIter.hasNext()) {
 			int root = rootIter.next();
@@ -63,10 +64,10 @@ public class BirdFinder {
 			int rightmostX = -1;
 			int topmostY = -1;
 			int bottommostY = -1;
-
+			
 			for (int i = 0; i < nodes.size(); i++) {
-				int nodeX = (int) binaryImage.getWidth() % nodes.get(i);
-				int nodeY = (int) binaryImage.getWidth() / nodes.get(i);
+				int nodeX = (int) nodes.get(i) % binaryImage.getWidth();
+				int nodeY = (int) nodes.get(i) / binaryImage.getWidth();
 
 				if (leftmostX == -1 || nodeX < leftmostX) {
 					leftmostX = nodeX;
@@ -90,8 +91,8 @@ public class BirdFinder {
 		return toOutline;
 	}
 
-	private int getPixelId(int x, int y) {
-		return (binaryImage.getWidth() * y) + x;
+	private int getPixelId(int imageWidth, int x, int y) {
+		return (imageWidth * y) + x;
 	}
 
 }

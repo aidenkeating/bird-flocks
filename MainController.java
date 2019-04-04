@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,10 +18,7 @@ import javafx.stage.FileChooser;
 public class MainController {
 	private static FileChooser fileChooser = new FileChooser();
 	private static BlackAndWhiteFilter bwFilter = new BlackAndWhiteFilter(127);
-	public static BufferedImage selectedImage;
-	public static BufferedImage binaryImage;
-	public static BufferedImage birdImage;
-	private static BirdFinder boxFilter = new BirdFinder(binaryImage);
+	private static BirdFinder boxFilter = new BirdFinder(1);
 	
 	@FXML
 	private MenuItem openButton;
@@ -39,7 +37,7 @@ public class MainController {
 
 	@FXML
 	void onClose(ActionEvent event) {
-
+		Platform.exit();
 	}
 
 	@FXML
@@ -51,12 +49,12 @@ public class MainController {
 		}
 
 		try {
-			selectedImage = ImageIO.read(imageFile);
-			binaryImage = bwFilter.applyToImage(selectedImage);
-			birdImage = boxFilter.outlineBirds(binaryImage);
-
+			BufferedImage selectedImage = ImageIO.read(imageFile);
+			BufferedImage binaryImage = bwFilter.applyToImage(selectedImage);
 			originalImageView.setImage(SwingFXUtils.toFXImage(selectedImage, null));
 			blackAndWhiteImageView.setImage(SwingFXUtils.toFXImage(binaryImage, null));
+			
+			BufferedImage birdImage = boxFilter.outlineBirds(binaryImage, selectedImage);
 			birdsOutlinedView.setImage(SwingFXUtils.toFXImage(birdImage, null));
 		} catch (IOException e) {
 
